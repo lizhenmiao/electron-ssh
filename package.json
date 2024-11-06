@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
+    "tailwind": "npx tailwindcss -i ./src/renderer/src/assets/input.css -o ./src/renderer/src/assets/output.css --watch",
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
@@ -20,7 +21,15 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
-    "electron-updater": "^6.1.7"
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "electron-updater": "^6.1.7",
+    "element-plus": "^2.8.7",
+    "pinia": "^2.2.6",
+    "pinia-plugin-persistedstate": "^4.1.2",
+    "ssh2": "^1.16.0",
+    "uuid": "^11.0.2",
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.2",
@@ -33,6 +42,9 @@
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.26.0",
     "prettier": "^3.3.2",
+    "tailwindcss": "^3.4.14",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-vue-components": "^0.27.4",
     "vite": "^5.3.1",
     "vue": "^3.4.30"
   }

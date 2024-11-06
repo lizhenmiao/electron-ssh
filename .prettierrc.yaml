@@ -1,4 +1,9 @@
+# 单引号
 singleQuote: true
+# 末尾不需要逗号
 semi: false
 printWidth: 100
+# 末尾逗号
 trailingComma: none
+# 换行符
+endOfLine: auto
