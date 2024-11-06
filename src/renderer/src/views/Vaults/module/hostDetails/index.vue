@@ -13,8 +13,8 @@
         <el-form-item label="名称 (Name)" prop="name">
           <el-input v-model="hostForm.name" />
         </el-form-item>
-        <el-form-item label="主机 (Hostname)" prop="hostname">
-          <el-input v-model="hostForm.hostname" />
+        <el-form-item label="主机 (Hostname)" prop="host">
+          <el-input v-model="hostForm.host" />
         </el-form-item>
         <el-form-item label="端口号 (Port)" prop="port">
           <el-input-number
@@ -23,6 +23,11 @@
             class="!w-full"
             :precision="0"
           />
+        </el-form-item>
+        <el-form-item label="协议 (Protocol)" prop="protocol">
+          <el-select v-model="hostForm.protocol">
+            <el-option label="SSH" value="ssh" />
+          </el-select>
         </el-form-item>
         <el-form-item label="用户名 (Username)" prop="username">
           <el-input v-model="hostForm.username" />
@@ -55,11 +60,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
+import { ref, getCurrentInstance } from 'vue'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 import { useRouter } from 'vue-router'
 
+const { proxy } = getCurrentInstance()
 const terminalStore = useTerminalStore()
 const router = useRouter()
 
@@ -71,9 +76,11 @@ const hostForm = ref({
   // 名称
   name: '',
   // 主机
-  hostname: '',
+  host: '',
   // 端口
   port: 22,
+  // 协议
+  protocol: 'ssh',
   // 用户名
   username: '',
   // 认证方法
@@ -87,8 +94,9 @@ const hostForm = ref({
 })
 
 const rules = ref({
-  hostname: [{ required: true, message: '请输入主机(Hostname)', trigger: 'blur' }],
+  host: [{ required: true, message: '请输入主机(Hostname)', trigger: 'blur' }],
   port: [{ required: true, message: '请输入端口号(Port)', trigger: 'blur' }],
+  protocol: [{ required: true, message: '请选择协议(Protocol)', trigger: 'blur' }],
   username: [{ required: true, message: '请输入用户名(Username)', trigger: 'blur' }],
   auth: [{ required: true, message: '请选择认证方法(Authentication)', trigger: 'blur' }],
   privateKeyPath: [{ required: true, message: '请输入私钥(Private Key)', trigger: 'blur' }]
@@ -111,23 +119,7 @@ const close = () => {
 const handleConnect = () => {
   form.value.validate((valid) => {
     if (valid) {
-      const id = uuidv4()
-      const menuId = `terminal-${id}`
-      const link = `/terminal/${id}`
-
-      terminalStore.addTerminal({
-        menuId,
-        link,
-        title: hostForm.value.name,
-        closeable: true,
-        params: {
-          ...hostForm.value
-        }
-      })
-
-      router.push({ path: link })
-      terminalStore.setActiveMenu(menuId)
-
+      proxy.$utils.createNewTerminal(terminalStore, router, hostForm.value)
       close()
     } else {
       console.log('error submit!!')

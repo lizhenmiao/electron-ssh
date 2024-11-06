@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+const fs = require('fs')
 
 const { Client } = require('ssh2')
 // 用于存储多个连接
@@ -13,7 +14,7 @@ const handleDisconnect = (event, id) => {
     delete connections[id]
     event.reply(`disconnected-${id}`, { id })
 
-    console.log(`id：${id} 已断开连接`)
+    console.log(`Disconnected: ${id}`)
   }
 }
 
@@ -26,11 +27,24 @@ async function handleFileOpen() {
   }
 }
 
+async function handleFileRead(event, filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    title: 'electron ssh',
+    width: 960,
+    height: 600,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -84,7 +98,7 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   ipcMain.on('connect-ssh', (event, { id, config }) => {
-    const { hostname, port, username, auth, password, privateKeyPath, passphrase } = config
+    const { host, port, username, auth, password, privateKeyPath, passphrase } = config
 
     // 先判断 connections[id] 是否存在
     if (connections[id]) {
@@ -99,7 +113,7 @@ app.whenReady().then(() => {
 
     conn
       .on('ready', () => {
-        console.log('SSH Connected', id)
+        console.log('SSH Connected: ', id)
 
         if (connections[id]) {
           connections[id].isConnected = true
@@ -111,12 +125,14 @@ app.whenReady().then(() => {
             handleError(err)
             return
           }
-          stream.on('data', (data) => {
-            event.reply(`terminal-output-${id}`, { id, data: data.toString() })
-          })
-          stream.on('close', () => {
-            handleDisconnect(event, id)
-          })
+          stream
+            .on('close', () => {
+              handleDisconnect(event, id)
+            })
+            .on('data', (data) => {
+              event.reply(`terminal-output-${id}`, { id, data: data.toString() })
+            })
+
           ipcMain.on(`terminal-input-${id}`, (e, input) => {
             stream.write(input)
           })
@@ -145,15 +161,20 @@ app.whenReady().then(() => {
         handleError(err)
       })
       .connect({
-        host: hostname,
-        port: port,
+        host,
+        port,
         username,
         ...(auth === 'password' && { password }),
         ...(auth === 'public-key' && {
           privateKey: require('fs').readFileSync(privateKeyPath),
           ...(passphrase && { passphrase })
         }),
-        ...(auth === 'keyboard-interactive' && { tryKeyboard: true, ...(password && { password }) })
+        ...(auth === 'keyboard-interactive' && {
+          tryKeyboard: true,
+          ...(password && { password })
+        }),
+        // 等待 SSH 握手完成的时间, 单位为毫秒, 10000ms = 1s
+        readyTimeout: 60000
       })
 
     connections[id] = {
@@ -163,11 +184,13 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('disconnect-ssh', (event, id) => {
-    console.log('收到断开连接请求', id)
+    console.log('Received disconnection request: ', id)
     handleDisconnect(event, id)
   })
 
   ipcMain.handle('dialog:openFile', handleFileOpen)
+
+  ipcMain.handle('readLocalFile', handleFileRead)
 
   createWindow()
 

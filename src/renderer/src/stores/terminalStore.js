@@ -19,19 +19,17 @@ export const useTerminalStore = defineStore('terminal', {
       }
     ],
     activeMenu: 'vaults',
-    excludedKeys: []
+    cachedViews: ['Vaults', 'SFTP']
   }),
   actions: {
-    addTerminal(terminal) {
-      this.terminalList.push(terminal)
-    },
     setActiveMenu(menuId) {
       this.activeMenu = menuId
     },
-    removeTerminal(terminalId) {
-      const index = this.terminalList.findIndex(
-        (item) => item.menuId === terminalId && item.closeable
-      )
+    addTerminal(terminal) {
+      this.terminalList.push(terminal)
+    },
+    removeTerminal(menuId) {
+      const index = this.terminalList.findIndex((item) => item.menuId === menuId && item.closeable)
 
       if (index !== -1) {
         this.terminalList.splice(index, 1)
@@ -47,10 +45,23 @@ export const useTerminalStore = defineStore('terminal', {
         prevData
       }
     },
-    setExcludedKeys(key) {
-      if (!this.excludedKeys.includes(key)) {
-        this.excludedKeys.push(key)
+    addCachedViews(key) {
+      if (!this.cachedViews.includes(key)) {
+        this.cachedViews.push(key)
       }
+    },
+    removeCachedViews(key) {
+      this.cachedViews = this.cachedViews.filter((item) => item !== key)
+    },
+    getTerminalByHost(host, port, username) {
+      return this.terminalList
+        .filter((item) => item.closeable)
+        .find(
+          (item) =>
+            item.params.host === host &&
+            item.params.port === port &&
+            item.params.username === username
+        )
     }
   },
   persist: false

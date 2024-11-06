@@ -2,66 +2,128 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-05 13:33:33
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-05 18:12:56
+ * @LastEditTime: 2024-11-06 17:32:44
  * @FilePath: \electron-ssh\src\renderer\src\views\Terminal\index.vue
  * @Description: Terminal
 -->
 <template>
-  <div class="w-full h-full py-1 pl-2 bg-[#2a2a2a] overflow-hidden">
-    <div ref="terminal" class="w-full h-full overflow-hidden"></div>
+  <div class="w-full h-full py-1 pl-2 bg-[#15172A] overflow-hidden">
+    <div ref="terminalWrapper" class="w-full h-full overflow-hidden"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, getCurrentInstance, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // https://xtermjs.org/docs/
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { Unicode11Addon } from '@xterm/addon-unicode11'
+import { WebLinksAddon } from '@xterm/addon-web-links'
+import { WebglAddon } from '@xterm/addon-webgl'
+
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 
+const { proxy } = getCurrentInstance()
 const route = useRoute()
 const terminalStore = useTerminalStore()
 
 // Terminal ref
-const terminal = ref(null)
+const terminalWrapper = ref(null)
 const loading = ref(false)
 const isConnected = ref(false)
 // Terminal 实例
 const terminalInstance = ref(null)
-// 当前命令
-// const currentCommand = ref('')
+const fitAddon = ref(null)
+const unicode11Addon = ref(null)
+const webLinksAddon = ref(null)
+const webglAddon = ref(null)
 
 // 当前 Terminal 的 ID
 const terminalId = route.params.id
 
+// 监听事件是否已绑定
+const eventIsBind = ref(false)
+
 const searchTerminal = terminalStore.terminalList.find(
   (item) => item.menuId === `terminal-${terminalId}`
 )
-console.log('searchTerminal===', searchTerminal, terminalStore.terminalList)
-const { hostname, port, username, password, auth, privateKeyPath, passphrase } =
+
+const { host, port, username, password, auth, privateKeyPath, passphrase } =
   (searchTerminal && searchTerminal.params) || {}
 
 const initializeTerminal = () => {
+  // https://xtermjs.org/docs/api/terminal/interfaces/iterminaloptions/
+  // https://xtermjs.org/docs/api/terminal/interfaces/iterminalinitonlyoptions/
   terminalInstance.value = new Terminal({
+    // 渲染类型
+    rendererType: 'canvas',
+    // 启用时, 光标将设置为下一行的开头
     convertEol: true,
-    // 背景色
+    // 背景色, https://xtermjs.org/docs/api/terminal/interfaces/itheme/
     theme: {
-      background: '#2a2a2a',
-      foreground: '#ffffff'
+      background: '#15172A',
+      foreground: '#3FB565'
     },
     // 光标闪烁
-    cursorBlink: true
+    cursorBlink: true,
+    // 是否允许使用建议的 api
+    allowProposedApi: true,
+    // 字体
+    fontFamily: 'Fira Code, Consolas, Courier New, monospace',
+    // 字体大小
+    fontSize: 13,
+    // 字符间距
+    letterSpacing: 0,
+    // 行高
+    lineHeight: 1.2,
+    // 日志级别
+    logLevel: 'debug'
   })
-  const fitAddon = new FitAddon()
-  terminalInstance.value.loadAddon(fitAddon)
-  terminalInstance.value.open(terminal.value)
-  fitAddon.fit()
+
+  terminalInstance.value.onResize((event) => {
+    console.log('row：', event.rows, 'col：', event.cols)
+  })
+
+  // 加载自适应插件
+  fitAddon.value = new FitAddon()
+  // terminalInstance.value.loadAddon(fitAddon.value)
+  fitAddon.value.activate(terminalInstance.value)
+
+  // 加载 Unicode11 插件
+  unicode11Addon.value = new Unicode11Addon()
+  // terminalInstance.value.loadAddon(unicode11Addon.value)
+  unicode11Addon.value.activate(terminalInstance.value)
+  // activate the new version
+  terminalInstance.value.unicode.activeVersion = '11'
+
+  // 加载 WebLinks 插件
+  webLinksAddon.value = new WebLinksAddon()
+  // terminalInstance.value.loadAddon(webLinksAddon.value)
+  webLinksAddon.value.activate(terminalInstance.value)
+
+  // 加载 Webgl 插件
+  webglAddon.value = new WebglAddon()
+  webglAddon.value.onContextLoss((e) => {
+    console.log('onContextLoss: ', e)
+    webglAddon.value.dispose()
+  })
+  // terminalInstance.value.loadAddon(webglAddon.value)
+  webglAddon.value.activate(terminalInstance.value)
+
+  // 绑定到 DOM
+  terminalInstance.value.open(terminalWrapper.value)
+
+  // 默认先进行自适应一次
+  handleTerminalFit()
 
   window.electron.ipcRenderer.on(`terminal-output-${terminalId}`, (event, { data }) => {
     terminalInstance.value.write(data)
-    terminalInstance.value.focus()
+
+    nextTick(() => {
+      terminalInstance.value.focus()
+    })
   })
 
   terminalInstance.value.onData((data) => {
@@ -70,11 +132,11 @@ const initializeTerminal = () => {
 
   if (!isConnected.value) {
     loading.value = true
-    terminalInstance.value.write(`Connecting to ${hostname}:${port}...\n`)
+    terminalInstance.value.write(`Connecting to ${host}:${port}...\n`)
     window.electron.ipcRenderer.send('connect-ssh', {
       id: terminalId,
       config: {
-        hostname,
+        host,
         port,
         username,
         password,
@@ -84,9 +146,7 @@ const initializeTerminal = () => {
       }
     })
 
-    window.electron.ipcRenderer.on(`connected-response-${terminalId}`, handleConnectedResponse)
-    window.electron.ipcRenderer.on(`keyboard-interactive-${terminalId}`, handleKeyboardInteractive)
-    window.electron.ipcRenderer.on(`disconnected-${terminalId}`, handleDisconnected)
+    handleEvent(true)
   }
 }
 
@@ -135,7 +195,7 @@ const handleKeyboardInteractive = (event, { id, name, password, prompts }) => {
   })
 }
 
-const handleDisconnect = () => {
+const handleSendDisconnect = () => {
   console.log('发送断开连接请求', terminalId)
   loading.value = true
   window.electron.ipcRenderer.send('disconnect-ssh', terminalId)
@@ -145,10 +205,80 @@ const handleDisconnected = () => {
   ElMessage.success('连接已断开')
   loading.value = false
   isConnected.value = false
+
+  handleEvent(false)
+}
+
+// 设置终端自适应
+const handleTerminalFit = () => {
+  if (fitAddon.value) {
+    fitAddon.value.fit()
+  }
+}
+
+const disposeAddon = (addon, name) => {
+  if (addon.value) {
+    try {
+      addon.value.dispose()
+      addon.value = null
+      console.log(`${name} 插件已被销毁`)
+    } catch (error) {
+      console.error(`销毁 ${name} 插件时出错:`, error)
+    }
+  } else {
+    console.log(`${name} 插件未加载`)
+  }
+}
+
+// 监听事件或者取消监听事件
+const handleEvent = (isListen = true) => {
+  if (isListen) {
+    if (eventIsBind.value) return
+    eventIsBind.value = true
+    window.addEventListener('resize', proxy.$utils.debounce(handleTerminalFit, 200))
+
+    window.electron.ipcRenderer.on(`connected-response-${terminalId}`, handleConnectedResponse)
+    window.electron.ipcRenderer.on(`keyboard-interactive-${terminalId}`, handleKeyboardInteractive)
+    window.electron.ipcRenderer.on(`disconnected-${terminalId}`, handleDisconnected)
+  } else {
+    if (!eventIsBind.value) return
+    eventIsBind.value = false
+
+    disposeAddon(fitAddon, 'fitAddon')
+    disposeAddon(unicode11Addon, 'unicode11Addon')
+    disposeAddon(webLinksAddon, 'webLinksAddon')
+    disposeAddon(webglAddon, 'webglAddon')
+    disposeAddon(terminalInstance, 'terminalInstance')
+
+    console.log(
+      'fitAddon===',
+      fitAddon.value,
+      'unicode11Addon===',
+      unicode11Addon.value,
+      'webLinksAddon===',
+      webLinksAddon.value,
+      'webglAddon===',
+      webglAddon.value,
+      'terminalInstance===',
+      terminalInstance.value
+    )
+
+    window.removeEventListener('resize', handleTerminalFit)
+
+    window.electron.ipcRenderer.removeListener(
+      `connected-response-${terminalId}`,
+      handleConnectedResponse
+    )
+    window.electron.ipcRenderer.removeListener(
+      `keyboard-interactive-${terminalId}`,
+      handleKeyboardInteractive
+    )
+    window.electron.ipcRenderer.removeListener(`disconnected-${terminalId}`, handleDisconnected)
+  }
 }
 
 onMounted(() => {
-  if (!terminalId || !hostname || !port || !username) {
+  if (!terminalId || !host || !port || !username) {
     ElMessage.error('参数错误')
     return
   }
@@ -160,23 +290,21 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   console.log('onBeforeUnmount', terminalId, isConnected.value)
+
   if (isConnected.value) {
-    handleDisconnect()
+    handleSendDisconnect()
   }
 
-  if (terminalInstance.value) {
-    terminalInstance.value.dispose()
-    terminalInstance.value = null
-  }
-
-  window.electron.ipcRenderer.removeListener(
-    `connected-response-${terminalId}`,
-    handleConnectedResponse
-  )
-  window.electron.ipcRenderer.removeListener(
-    `keyboard-interactive-${terminalId}`,
-    handleKeyboardInteractive
-  )
-  window.electron.ipcRenderer.removeListener(`disconnected-${terminalId}`, handleDisconnected)
+  handleEvent(false)
 })
 </script>
+
+<style>
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  display: none;
+}
+</style>
