@@ -26,14 +26,14 @@ export const createNewTerminal = (terminalStore, router, hostDetails) => {
   }
 
   const id = uuidv4()
-  const menuId = `terminal-${id}`
+  const menuId = `Terminal_${id}`
   const link = `/terminal/${id}`
 
   terminalStore.addTerminal({
     menuId,
     link,
     title: hostDetails.name,
-    closeable: true,
+    isTerminal: true,
     params: {
       ...hostDetails
     }
@@ -49,7 +49,7 @@ export const createNewTerminal = (terminalStore, router, hostDetails) => {
 export const getTerminalName = ({ menuId, route }) => {
   if (!menuId && !route) return
   if (menuId) {
-    return menuId.replace('terminal-', 'Terminal_')
+    return menuId
   } else {
     const { name, params } = route || {}
     const { id } = params || {}

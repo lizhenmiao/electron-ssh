@@ -7,13 +7,14 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import '@xterm/xterm/css/xterm.css'
 import utils from './utils'
 import directives from './directives'
-
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import './assets/main.css'
 
 const app = createApp(App)
 
+app.component('RecycleScroller', RecycleScroller)
 app.config.globalProperties.$utils = utils
-
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }

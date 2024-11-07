@@ -2,7 +2,7 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-05 13:33:33
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-06 17:32:44
+ * @LastEditTime: 2024-11-07 18:13:51
  * @FilePath: \electron-ssh\src\renderer\src\views\Terminal\index.vue
  * @Description: Terminal
 -->
@@ -14,7 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, getCurrentInstance, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // https://xtermjs.org/docs/
 import { Terminal } from '@xterm/xterm'
@@ -27,6 +27,7 @@ import { useTerminalStore } from '@renderer/stores/terminalStore'
 
 const { proxy } = getCurrentInstance()
 const route = useRoute()
+const router = useRouter()
 const terminalStore = useTerminalStore()
 
 // Terminal ref
@@ -40,16 +41,16 @@ const unicode11Addon = ref(null)
 const webLinksAddon = ref(null)
 const webglAddon = ref(null)
 
-// 当前 Terminal 的 ID
+// 当前 Terminal 的 ID, 不包含 Terminal_, 只有一串 UUID
 const terminalId = route.params.id
 
 // 监听事件是否已绑定
 const eventIsBind = ref(false)
 
 const searchTerminal = terminalStore.terminalList.find(
-  (item) => item.menuId === `terminal-${terminalId}`
+  (item) => item.menuId === `Terminal_${terminalId}`
 )
-
+const { menuId } = searchTerminal || {}
 const { host, port, username, password, auth, privateKeyPath, passphrase } =
   (searchTerminal && searchTerminal.params) || {}
 
@@ -106,7 +107,7 @@ const initializeTerminal = () => {
   // 加载 Webgl 插件
   webglAddon.value = new WebglAddon()
   webglAddon.value.onContextLoss((e) => {
-    console.log('onContextLoss: ', e)
+    console.log('on context loss: ', e)
     webglAddon.value.dispose()
   })
   // terminalInstance.value.loadAddon(webglAddon.value)
@@ -207,6 +208,25 @@ const handleDisconnected = () => {
   isConnected.value = false
 
   handleEvent(false)
+
+  handleCloseTerminal()
+}
+
+const handleCloseTerminal = () => {
+  nextTick(() => {
+    // 判断当前页面有没有关闭, 没有的话进行关闭页面
+    const removeMenuName = proxy.$utils.getTerminalName({ menuId })
+    if (terminalStore.cachedViews.includes(removeMenuName)) {
+      console.log('页面未关闭, 关闭页面', removeMenuName)
+      const switchData = terminalStore.closeTerminal(menuId)
+
+      if (switchData) {
+        router.replace({ path: switchData.link })
+      }
+    } else {
+      console.log('页面已关闭', removeMenuName)
+    }
+  })
 }
 
 // 设置终端自适应
@@ -280,6 +300,8 @@ const handleEvent = (isListen = true) => {
 onMounted(() => {
   if (!terminalId || !host || !port || !username) {
     ElMessage.error('参数错误')
+
+    handleCloseTerminal()
     return
   }
 

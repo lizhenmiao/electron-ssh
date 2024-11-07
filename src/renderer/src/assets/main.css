@@ -1,6 +1,20 @@
 @import './base.css';
 @import './output.css';
 
+:root {
+  --header-menu-bg-color: #292C3F;
+  --header-menu-terminal-bg-color: #14172A;
+  --menu-item-bg-color: #343547;
+  --menu-item-text-color: #ffffff;
+  --menu-item-active-bg-color: #3F4052;
+  --menu-item-active-text-color: #ffffff;
+  --terminal-active-bg-color: #1E3636;
+  --terminal-active-text-color: #519472;
+  --terminal-close-bg-color: #36384D;
+  --terminal-active-close-bg-clor: #244242;
+  --terminal-close-hover-text-clor: #449963;
+}
+
 body {
   overflow: hidden;
   -webkit-user-select: none;

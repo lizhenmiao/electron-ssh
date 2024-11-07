@@ -2,46 +2,46 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-05 09:42:22
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-06 17:56:42
+ * @LastEditTime: 2024-11-07 15:00:48
  * @FilePath: \electron-ssh\src\renderer\src\components\MenuItem\index.vue
  * @Description: 每项菜单
 -->
 <template>
   <div
     ref="menuItem"
-    class="flex flex-nowrap items-center justify-between text-white py-1 px-3 rounded-md text-base cursor-pointer transition-all duration-300 ease-in-out hover:!bg-[#3f4152]"
-    :class="[
-      props.active ? (props.closeable ? '!w-[150px]' : '!w-[120px]') : '',
-      props.active ? 'bg-[#3f4152]' : 'bg-[#343547]',
-      props.closeable ? 'max-w-[150px]' : 'max-w-[120px]'
-    ]"
+    class="custom-menu-item flex flex-nowrap items-center justify-between gap-2 text-white py-1 px-3 rounded-md text-base transition-all duration-300 ease-in-out"
+    :class="{
+      'is-active': props.active,
+      'is-terminal': props.isTerminal
+    }"
     @click="handleClick"
   >
+    <template v-if="props.isTerminal">
+      <el-icon
+        :size="20"
+        class="close-icon flex-shrink-0 transition-all rounded-[3px]"
+        @click.stop="handleCloseTerminal"
+      >
+        <CloseBold class="p-[2px]" />
+      </el-icon>
+      <el-icon v-if="props.isTerminal" :size="20" class="vps-icon flex-shrink-0 transition-all">
+        <ElementPlus class="p-[2px]" />
+      </el-icon>
+    </template>
     <span
       class="flex-1 overflow-hidden no-underline text-inherit flex items-center justify-start gap-[5px]"
     >
       <el-icon v-if="props.icon" :size="18"><component :is="props.icon"></component></el-icon>
-      <el-text v-ellipsis-tooltip truncated class="!text-inherit font-medium">{{
-        props.title
-      }}</el-text>
+      <span v-ellipsis-tooltip="{ maxWidth: 300 }" class="font-medium">{{ props.title }}</span>
     </span>
-    <el-icon
-      v-if="props.closeable"
-      :size="16"
-      class="flex-shrink-0 ml-2 hover:scale-110 transition-all"
-      @click.stop="handleCloseTerminal"
-    >
-      <CloseBold />
-    </el-icon>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, getCurrentInstance } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 import { useRouter } from 'vue-router'
 
-const { proxy } = getCurrentInstance()
 const terminalStore = useTerminalStore()
 const router = useRouter()
 
@@ -69,19 +69,18 @@ const props = defineProps({
   icon: {
     type: String
   },
-  closeable: {
+  // 是否是终端的菜单
+  isTerminal: {
     type: Boolean,
     default: false
   }
 })
 
 const handleCloseTerminal = () => {
-  const { prevData } = terminalStore.removeTerminal(props.menuId)
+  const switchData = terminalStore.closeTerminal(props.menuId)
 
-  terminalStore.removeCachedViews(proxy.$utils.getTerminalName({ menuId: props.menuId }))
-
-  if (prevData) {
-    router.replace({ path: prevData.link })
+  if (switchData) {
+    router.replace({ path: switchData.link })
   }
 }
 
@@ -94,22 +93,82 @@ const handleClick = () => {
 const menuItem = ref(null)
 
 onMounted(() => {
-  const maxWidth = props.closeable ? 150 : 120
+  const maxWidth = props.isTerminal ? 200 : 120
 
   // 如果当前菜单是选中的话, 先将【宽度 class】去除, 为了获取实际宽度
   if (props.active) {
-    menuItem.value.classList.remove(`!w-[${maxWidth}px]`)
+    menuItem.value.classList.remove('is-active')
+    if (props.isTerminal) {
+      menuItem.value.classList.remove('is-terminal')
+    }
   }
 
   // 获取元素的宽度
   const { width } = menuItem.value.getBoundingClientRect()
+  const ceilWidth = Math.ceil(width)
 
   // 设置宽度为元素的默认宽度, 如果超出最大宽度, 则将它设置为最大宽度
-  menuItem.value.setAttribute('style', `width: ${width > maxWidth ? maxWidth : width}px`)
+  menuItem.value.setAttribute(
+    'style',
+    `--ele-default-width: ${ceilWidth > maxWidth ? maxWidth : ceilWidth}px`
+  )
 
   // 最后如果当前菜单是选中的话, 再次设置【宽度 class】
   if (props.active) {
-    menuItem.value.classList.add(`!w-[${maxWidth}px]`)
+    menuItem.value.classList.add('is-active')
+    if (props.isTerminal) {
+      menuItem.value.classList.add('is-terminal')
+    }
   }
 })
 </script>
+<style scoped>
+.custom-menu-item {
+  background-color: var(--menu-item-bg-color);
+  color: var(--menu-item-text-color);
+  width: var(--ele-default-width);
+  max-width: 120px;
+}
+
+.custom-menu-item:not(.is-active):hover,
+.custom-menu-item.is-active {
+  background-color: var(--menu-item-active-bg-color);
+  color: var(--menu-item-active-text-color);
+}
+
+.custom-menu-item.is-active {
+  width: 120px !important;
+}
+
+.custom-menu-item.is-terminal {
+  width: 150px;
+  max-width: 200px;
+}
+
+.close-icon,
+.vps-icon {
+  display: none;
+}
+
+.custom-menu-item.is-terminal:not(.is-active):not(:hover) .vps-icon,
+.custom-menu-item.is-terminal:not(.is-active):hover .close-icon,
+.custom-menu-item.is-terminal.is-active .close-icon {
+  display: block;
+}
+
+.custom-menu-item.is-terminal.is-active {
+  background-color: var(--terminal-active-bg-color);
+  color: var(--terminal-active-text-color);
+  width: 200px !important;
+}
+
+.custom-menu-item.is-terminal:not(.is-active) .close-icon:hover {
+  background-color: var(--terminal-close-bg-color);
+  color: var(--terminal-close-hover-text-clor);
+}
+
+.custom-menu-item.is-terminal.is-active .close-icon:hover {
+  background-color: var(--terminal-active-close-bg-clor);
+  color: var(--terminal-close-hover-text-clor);
+}
+</style>
