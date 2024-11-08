@@ -2,7 +2,7 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-06 18:11:06
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-07 17:54:31
+ * @LastEditTime: 2024-11-08 13:57:59
  * @FilePath: \electron-ssh\src\renderer\src\directives\ellipsisTooltip.js
  * @Description: 文本超出显示省略号以及鼠标悬浮显示 tooltip
  */
@@ -26,6 +26,8 @@ const ellipsisTooltip = {
     const preferredDirection = binding.value?.direction || 'bottom' // 默认方向为下方
 
     const showTooltip = () => {
+      if (!globalTooltip) return
+
       // 更新 tooltip 文本内容
       globalTooltip.textElement.textContent = el.textContent
 

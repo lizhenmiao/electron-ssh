@@ -2,15 +2,15 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-04 09:47:11
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-07 18:12:16
+ * @LastEditTime: 2024-11-08 13:11:30
  * @FilePath: \electron-ssh\src\renderer\src\App.vue
  * @Description: App
 -->
 <template>
   <el-container class="!h-screen">
     <el-header
-      class="!m-0 !py-0 !px-4 !h-[50px]"
-      :style="`background-color: var(--${['vaults', 'sftp'].includes(terminalStore.activeMenu) ? 'header-menu-bg-color' : 'header-menu-terminal-bg-color'})`"
+      class="custom-header-wrapper !m-0 !py-0 !px-4 !h-[50px]"
+      :class="{ 'is-terminal': !['vaults', 'sftp'].includes(terminalStore.activeMenu) }"
     >
       <el-scrollbar view-class="flex items-center h-full">
         <div class="flex items-center flex-nowrap gap-2 px-0 py-2">
@@ -27,16 +27,15 @@
             <el-divider
               v-if="terminalStore.terminalList.length > 2 && item.menuId === 'sftp'"
               direction="vertical"
-              class="m-0 border-[#2D2F43]"
+              class="m-0 custom-menu-divider"
             />
             <el-icon
               v-if="index === terminalStore.terminalList.length - 1"
               :size="20"
+              class="custom-menu-add-icon"
               @click="chooseHostModal.open()"
             >
-              <Plus
-                class="p-[2px] transition-all duration-300 ease-in-out text-[#84869B] hover:!text-white"
-              />
+              <Plus class="p-[2px] transition-all duration-300 ease-in-out" />
             </el-icon>
           </template>
         </div>

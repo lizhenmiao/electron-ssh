@@ -2,12 +2,12 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-05 13:33:33
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-07 18:13:51
+ * @LastEditTime: 2024-11-08 16:02:39
  * @FilePath: \electron-ssh\src\renderer\src\views\Terminal\index.vue
  * @Description: Terminal
 -->
 <template>
-  <div class="w-full h-full py-1 pl-2 bg-[#15172A] overflow-hidden">
+  <div class="custom-terminal-wrapper w-full h-full py-1 pl-2 overflow-hidden">
     <div ref="terminalWrapper" class="w-full h-full overflow-hidden"></div>
   </div>
 </template>
@@ -24,6 +24,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { WebglAddon } from '@xterm/addon-webgl'
 
 import { useTerminalStore } from '@renderer/stores/terminalStore'
+import eventBus from '@renderer/utils/eventBus.js'
 
 const { proxy } = getCurrentInstance()
 const route = useRoute()
@@ -64,8 +65,10 @@ const initializeTerminal = () => {
     convertEol: true,
     // 背景色, https://xtermjs.org/docs/api/terminal/interfaces/itheme/
     theme: {
-      background: '#15172A',
-      foreground: '#3FB565'
+      // background: '#15172A',
+      background: proxy.$utils.getComputedStyleProperty(document.body, '--menu-active-bg-color'),
+      // foreground: '#3FB565'
+      foreground: proxy.$utils.getComputedStyleProperty(document.body, '--menu-item-text-color')
     },
     // 光标闪烁
     cursorBlink: true,
@@ -216,7 +219,11 @@ const handleCloseTerminal = () => {
   nextTick(() => {
     // 判断当前页面有没有关闭, 没有的话进行关闭页面
     const removeMenuName = proxy.$utils.getTerminalName({ menuId })
-    if (terminalStore.cachedViews.includes(removeMenuName)) {
+    const isOpen = terminalStore.cachedViews.includes(removeMenuName)
+    // 判断当前页面路径跟已打开的页面路径是否一致
+    const isEqual = router.currentRoute.value.fullPath === route.fullPath
+
+    if (isOpen || isEqual) {
       console.log('页面未关闭, 关闭页面', removeMenuName)
       const switchData = terminalStore.closeTerminal(menuId)
 
@@ -297,6 +304,25 @@ const handleEvent = (isListen = true) => {
   }
 }
 
+const handleThemeChange = (theme) => {
+  console.log(`主题切换了: ${theme}`)
+
+  if (terminalInstance.value) {
+    const newValue = terminalInstance.value.options.theme
+
+    newValue.background = proxy.$utils.getComputedStyleProperty(
+      document.body,
+      '--menu-active-bg-color'
+    )
+    newValue.foreground = proxy.$utils.getComputedStyleProperty(
+      document.body,
+      '--menu-item-text-color'
+    )
+
+    terminalInstance.value.options.theme = { ...newValue }
+  }
+}
+
 onMounted(() => {
   if (!terminalId || !host || !port || !username) {
     ElMessage.error('参数错误')
@@ -308,6 +334,9 @@ onMounted(() => {
   if (!terminalInstance.value) {
     initializeTerminal()
   }
+
+  eventBus.on('themeChanged', handleThemeChange)
+  console.log('绑定主题监听事件')
 })
 
 onBeforeUnmount(() => {
@@ -318,15 +347,8 @@ onBeforeUnmount(() => {
   }
 
   handleEvent(false)
+
+  eventBus.off('themeChanged', handleThemeChange)
+  console.log('卸载主题监听事件')
 })
 </script>
-
-<style>
-.xterm .xterm-viewport {
-  overflow-y: auto !important;
-}
-
-.xterm .xterm-viewport::-webkit-scrollbar {
-  display: none;
-}
-</style>

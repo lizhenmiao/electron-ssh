@@ -1,0 +1,160 @@
+/* $terminal-theme: (
+  // 未选中时的菜单背景色
+  menu-bg-color: #292C3F,
+  // 菜单文本颜色
+  menu-text-color: #84869B,
+  // 菜单文本 hover 时颜色
+  menu-text-hover-color: #ffffff,
+  // 选中时的菜单背景色
+  menu-active-bg-color: #14172A,
+  // 未选中时菜单项背景色
+  menu-item-bg-color: #343547,
+  // 未选中时菜单项文字颜色
+  menu-item-text-color: #ffffff,
+  // 选中时菜单项背景色
+  menu-item-active-bg-color: #3F4052,
+  // 选中时菜单项文字颜色
+  menu-item-active-text-color: #ffffff,
+  // terminal 菜单项选中时背景色
+  terminal-active-bg-color: #1E3636,
+  // terminal 菜单项选中时文字颜色
+  terminal-active-text-color: #519472,
+  // terminal 菜单项关闭按钮背景色
+  terminal-close-bg-color: #36384D,
+  // terminal 菜单项选中时关闭按钮背景色
+  terminal-active-close-bg-color: #244242,
+  // terminal 菜单项关闭按钮 hover 颜色
+  terminal-close-hover-color: #449963
+); */
+
+// 深色主题，灵感来自 One Dark Pro
+$dark-theme: (
+  // 未选中时的菜单背景色
+  menu-bg-color: #282C34,
+  // 菜单文本颜色
+  menu-text-color: #ABB2BF,
+  // 菜单文本 hover 时颜色
+  menu-text-hover-color: #FFFFFF,
+  // 选中时的菜单背景色
+  menu-active-bg-color: #21252B,
+  // 未选中时菜单项背景色
+  menu-item-bg-color: #3A3F4B,
+  // 未选中时菜单项文字颜色
+  menu-item-text-color: #D7DAE0,
+  // 选中时菜单项背景色
+  menu-item-active-bg-color: #4B5263,
+  // 选中时菜单项文字颜色
+  menu-item-active-text-color: #FFFFFF,
+  // terminal 菜单项选中时背景色
+  terminal-active-bg-color: #2C313C,
+  // terminal 菜单项选中时文字颜色
+  terminal-active-text-color: #98C379,
+  // terminal 菜单项关闭按钮背景色
+  terminal-close-bg-color: #4B5263,
+  // terminal 菜单项选中时关闭按钮背景色
+  terminal-active-close-bg-color: #3A3F4B,
+  // terminal 菜单项关闭按钮 hover 颜色
+  terminal-close-hover-color: #E06C75
+);
+
+// 浅色主题，灵感来自 JetBrains Light
+$light-theme: (
+  menu-bg-color: #E6E6E6,
+  menu-text-color: #4D4D4D,
+  menu-text-hover-color: #000000,
+  menu-active-bg-color: #CCCCCC,
+  menu-item-bg-color: #F2F2F2,
+  menu-item-text-color: #333333,
+  menu-item-active-bg-color: #BFBFBF,
+  menu-item-active-text-color: #1A1A1A,
+  terminal-active-bg-color: #E0E0E0,
+  terminal-active-text-color: #00897B,
+  terminal-close-bg-color: #BFBFBF,
+  terminal-active-close-bg-color: #999999,
+  terminal-close-hover-color: #FF4081
+);
+
+// 中性色主题，类似于 Material Design
+$neutral-theme: (
+  menu-bg-color: #2E2E2E,
+  menu-text-color: #B0B0B0,
+  menu-text-hover-color: #FFFFFF,
+  menu-active-bg-color: #373737,
+  menu-item-bg-color: #3C3C3C,
+  menu-item-text-color: #D0D0D0,
+  menu-item-active-bg-color: #505050,
+  menu-item-active-text-color: #E0E0E0,
+  terminal-active-bg-color: #333333,
+  terminal-active-text-color: #4CAF50,
+  terminal-close-bg-color: #505050,
+  terminal-active-close-bg-color: #3C3C3C,
+  terminal-close-hover-color: #FF5722
+);
+
+// 对比色主题，适合夜间模式
+$contrast-theme: (
+  menu-bg-color: #1A1A1A,
+  menu-text-color: #E1E1E1,
+  menu-text-hover-color: #FFFFFF,
+  menu-active-bg-color: #2E2E2E,
+  menu-item-bg-color: #262626,
+  menu-item-text-color: #FFFFFF,
+  menu-item-active-bg-color: #3A3A3A,
+  menu-item-active-text-color: #FFFFFF,
+  terminal-active-bg-color: #282828,
+  terminal-active-text-color: #FFD700,
+  terminal-close-bg-color: #3A3A3A,
+  terminal-active-close-bg-color: #262626,
+  terminal-close-hover-color: #FF4500
+);
+
+// 蓝色主题，灵感来自 WebStorm
+$blue-theme: (
+  menu-bg-color: #253A4B,
+  menu-text-color: #D6EAF8,
+  menu-text-hover-color: #FFFFFF,
+  menu-active-bg-color: #1B2B3A,
+  menu-item-bg-color: #2F4F60,
+  menu-item-text-color: #EAF2F8,
+  menu-item-active-bg-color: #1A5276,
+  menu-item-active-text-color: #FFFFFF,
+  terminal-active-bg-color: #1B4F72,
+  terminal-active-text-color: #80D8FF,
+  terminal-close-bg-color: #2F4F60,
+  terminal-active-close-bg-color: #1B2B3A,
+  terminal-close-hover-color: #29B6F6
+);
+
+@mixin apply-theme($theme) {
+  // 输出主题 map 的内容
+  // @debug $theme;
+
+  @each $key, $value in $theme {
+    --#{$key}: #{$value};
+  }
+}
+
+// 默认使用深色主题
+:root {
+  @include apply-theme($dark-theme);
+}
+
+.theme-dark {
+  @include apply-theme($dark-theme);
+}
+
+.theme-light {
+  @include apply-theme($light-theme);
+}
+
+.theme-neutral {
+  @include apply-theme($neutral-theme);
+}
+
+.theme-contrast {
+  @include apply-theme($contrast-theme);
+}
+
+.theme-blue {
+  @include apply-theme($blue-theme);
+}

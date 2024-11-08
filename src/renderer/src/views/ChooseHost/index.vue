@@ -13,19 +13,14 @@
     <el-scrollbar class="h-[60vh]">
       <h3 class="px-2 mb-2 text-[#7B8C94] text-[14px] font-medium">Hosts</h3>
       <RecycleScroller v-slot="{ item }" :items="showHostList" :item-size="36" key-field="id">
-        <div
-          class="py-1 px-2 cursor-pointer hover:bg-[#E6EBED] text-[#ABB1B7] hover:text-[#2A2A2A] rounded-md flex items-center gap-2 transition-all duration-300 ease-in-out h-[36px]"
+        <HostItem
+          class="py-1 px-2 hover:bg-[#E6EBED] text-[#ABB1B7] hover:text-[#2A2A2A] rounded-md h-[36px]"
+          :params="item"
+          :icon-width="22"
+          icon-rounded="0.375rem"
+          :show-host="false"
           @click="handleSelectHost(item)"
-        >
-          <div
-            class="w-[22px] h-[22px] bg-[#EB0000] text-white rounded-md flex items-center justify-center flex-shrink-0"
-          >
-            <el-icon :size="14"><ElementPlus /></el-icon>
-          </div>
-          <div class="flex-1 overflow-hidden">
-            <div v-ellipsis-tooltip="{ maxWidth: 350 }" class="text-[14px]">{{ item.name }}</div>
-          </div>
-        </div>
+        ></HostItem>
       </RecycleScroller>
     </el-scrollbar>
   </el-dialog>
@@ -35,6 +30,7 @@
 import { ref, getCurrentInstance, nextTick } from 'vue'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 import { useRouter } from 'vue-router'
+import HostItem from '@renderer/components/HostItem/index.vue'
 
 const { proxy } = getCurrentInstance()
 const terminalStore = useTerminalStore()
@@ -74,14 +70,3 @@ const handleSelectHost = (item) => {
 
 defineExpose({ open })
 </script>
-
-<style>
-.custom-el-input__wrapper-bg .el-input__wrapper.is-focus {
-  box-shadow: none !important;
-}
-
-.custom-el-input__wrapper-bg .el-input__wrapper {
-  background-color: #dfe3e6;
-  border-radius: 8px;
-}
-</style>

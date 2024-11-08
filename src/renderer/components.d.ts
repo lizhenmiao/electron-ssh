@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ConnectStatus: typeof import('./src/components/ConnectStatus/index.vue')['default']
     CustomMenu: typeof import('./src/components/CustomMenu/index.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -41,6 +42,7 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElText: typeof import('element-plus/es')['ElText']
     ElTimePicker: typeof import('element-plus/es')['ElTimePicker']
+    HostItem: typeof import('./src/components/HostItem/index.vue')['default']
     MenuItem: typeof import('./src/components/MenuItem/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

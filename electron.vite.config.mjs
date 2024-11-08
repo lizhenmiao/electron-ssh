@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 
 export default defineConfig({
   main: {
@@ -26,6 +27,12 @@ export default defineConfig({
       }),
       Components({
         resolvers: [ElementPlusResolver()]
+      }),
+      createSvgIconsPlugin({
+        // 指定需要合并的 SVG 文件夹路径
+        iconDirs: [resolve(process.cwd(), 'src/renderer/src/icons/svg')],
+        // 指定 symbolId 格式
+        symbolId: 'icon-[name]'
       })
     ]
   }

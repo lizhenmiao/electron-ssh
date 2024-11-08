@@ -111,9 +111,25 @@ export const throttle = (func, limit) => {
   }
 }
 
+/**
+ * 获取指定 DOM 元素的计算样式属性值
+ * @param {HTMLElement} element - 要获取样式的 DOM 元素
+ * @param {string} property - 要获取的 CSS 属性名称
+ * @returns {string} - 指定属性的计算样式值
+ */
+export const getComputedStyleProperty = (element, property) => {
+  if (!(element instanceof HTMLElement)) {
+    throw new Error('The provided element is not a valid DOM element.')
+  }
+
+  const computedStyle = window.getComputedStyle(element)
+  return computedStyle.getPropertyValue(property)
+}
+
 export default {
   createNewTerminal,
   getTerminalName,
   debounce,
-  throttle
+  throttle,
+  getComputedStyleProperty
 }

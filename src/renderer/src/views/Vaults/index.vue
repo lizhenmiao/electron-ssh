@@ -2,43 +2,44 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-05 09:31:25
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-07 18:24:37
+ * @LastEditTime: 2024-11-08 16:03:38
  * @FilePath: \electron-ssh\src\renderer\src\views\Vaults\index.vue
- * @Description: 主机列表页
+ * @Description: 主机列表
 -->
 <template>
   <div class="h-full flex flex-col">
     <section
-      class="flex-shrink-0 flex items-center justify-items-start flex-wrap bg-[#E6EBED] px-4 py-2"
+      class="flex-shrink-0 flex items-center justify-between flex-wrap bg-[#E6EBED] px-4 py-2"
     >
       <el-button type="primary" @click="handleAddHost">
         <el-icon :size="18" class="rotate-90"><SwitchFilled /></el-icon>
         <span class="ml-2">添加主机</span>
       </el-button>
+      <div class="flex items-center text-[15px] text-black">
+        <el-text>主题：</el-text>
+        <el-select v-model="theme" placeholder="切换主题" class="w-[100px]" @change="changeTheme">
+          <el-option
+            v-for="item in themeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </div>
     </section>
     <el-divider class="m-0" />
     <el-scrollbar class="flex-1 p-4">
       <div
         class="grid grid-cols-1 gap-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xs:gap-2 md:gap-3"
       >
-        <div
+        <HostItem
           v-for="(item, index) in terminalStore.hostList"
           :key="index"
-          class="bg-white rounded-md p-2 flex items-center gap-2 hover:bg-[#E6EBED] cursor-pointer transition-all duration-300 ease-in-out shadow-sm"
+          class="p-2 bg-white rounded-md hover:bg-[#E6EBED] shadow-sm"
+          :params="item"
           @dblclick="proxy.$utils.createNewTerminal(terminalStore, router, item)"
         >
-          <div
-            class="w-[40px] h-[40px] bg-[#EB0000] text-white rounded-xl flex items-center justify-center flex-shrink-0"
-          >
-            <el-icon :size="25"><ElementPlus /></el-icon>
-          </div>
-          <div class="flex-1 overflow-hidden">
-            <div class="text-[14px] text-[#3F4049] font-medium">{{ item.name }}</div>
-            <div class="text-[12px] text-gray-500">
-              {{ `${item.protocol},${item.host}:${item.port}` }}
-            </div>
-          </div>
-        </div>
+        </HostItem>
       </div>
     </el-scrollbar>
     <hostDetails ref="hostDetailsRef" />
@@ -51,6 +52,8 @@ import { ElMessage } from 'element-plus'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 import { useRouter } from 'vue-router'
 import hostDetails from '@renderer/views/Vaults/module/hostDetails/index.vue'
+import HostItem from '@renderer/components/HostItem/index.vue'
+import eventBus from '@renderer/utils/eventBus.js'
 
 const { proxy } = getCurrentInstance()
 const terminalStore = useTerminalStore()
@@ -62,7 +65,43 @@ const handleAddHost = () => {
   hostDetailsRef.value.open()
 }
 
+const theme = ref('contrast')
+
+const themeList = [
+  {
+    value: 'dark',
+    label: '暗黑'
+  },
+  {
+    value: 'light',
+    label: '亮色'
+  },
+  {
+    value: 'neutral',
+    label: '中性'
+  },
+  {
+    value: 'contrast',
+    label: '对比'
+  },
+  {
+    value: 'blue',
+    label: '蓝色'
+  }
+]
+
+const changeTheme = () => {
+  themeList.forEach((item) => {
+    document.body.classList.remove(`theme-${item.value}`)
+  })
+  document.body.classList.add(`theme-${theme.value}`)
+
+  eventBus.emit('themeChanged', theme.value)
+}
+
 onMounted(() => {
+  changeTheme()
+
   window.api
     .readLocalFile('C:/Users/Dorsey/Desktop/vps.json')
     .then((res) => {

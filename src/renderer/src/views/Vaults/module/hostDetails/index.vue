@@ -138,28 +138,3 @@ defineExpose({
   open
 })
 </script>
-
-<style>
-.host-details-drawer .el-drawer__header {
-  margin-bottom: 0;
-}
-
-.host-details-drawer .el-drawer__body {
-  padding: 1rem;
-  padding-right: 0;
-}
-
-.host-details-drawer .el-drawer__body .el-scrollbar {
-  padding-right: 1rem;
-}
-
-.host-details-drawer .el-drawer__header .el-drawer__title {
-  color: var(--ev-c-black-mute);
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.host-details-drawer .el-input__inner {
-  text-align: left !important;
-}
-</style>
