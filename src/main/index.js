@@ -1,50 +1,31 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-const fs = require('fs')
 
-const { Client } = require('ssh2')
-// 用于存储多个连接
-const connections = {}
+import { handleConnectSSH, handleDisconnectSSH } from './handle/ssh'
+import { handleFileOpen, handleFileRead } from './handle/file'
+import {
+  handleCreateWebdav,
+  handleGetDirectoryContents,
+  handleUploadConfig,
+  handleDownloadConfig
+} from './handle/webdav'
+import { dbPath, SyncCloudDatabase } from './db/sqlite'
+import { getHosts, addHost, updateHost, deleteHost } from './db/hosts'
+import { getGroups, addGroup, updateGroup, deleteGroup } from './db/groups'
+import { getKeys, addKey, updateKey, deleteKey } from './db/keys'
+import { getSettings, updateSettings } from './db/settings'
 
-const handleDisconnect = (event, id) => {
-  if (connections[id]) {
-    if (connections[id].conn) connections[id].conn.end()
-    delete connections[id]
-    event.reply(`disconnected-${id}`, { id })
-
-    console.log(`Disconnected: ${id}`)
-  }
-}
-
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog()
-  if (canceled) {
-    return
-  } else {
-    return filePaths[0]
-  }
-}
-
-async function handleFileRead(event, filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(data)
-      }
-    })
-  })
-}
+// 控制台中文乱码可以添加以下命令, 将控制台的默认编码更改为 UTF-8
+// chcp 65001
 
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     title: 'electron ssh',
     width: 960,
-    height: 600,
+    height: 640,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -97,100 +78,39 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  ipcMain.on('connect-ssh', (event, { id, config }) => {
-    const { host, port, username, auth, password, privateKeyPath, passphrase } = config
-
-    // 先判断 connections[id] 是否存在
-    if (connections[id]) {
-      handleDisconnect(event, id)
-    }
-    const handleError = (err) => {
-      event.reply(`connected-response-${id}`, { id, success: false, message: err.message })
-      if (connections[id]) connections[id].isConnected = false
-    }
-
-    const conn = new Client()
-
-    conn
-      .on('ready', () => {
-        console.log('SSH Connected: ', id)
-
-        if (connections[id]) {
-          connections[id].isConnected = true
-          event.reply(`connected-response-${id}`, { id, success: true })
-        }
-
-        conn.shell((err, stream) => {
-          if (err) {
-            handleError(err)
-            return
-          }
-          stream
-            .on('close', () => {
-              handleDisconnect(event, id)
-            })
-            .on('data', (data) => {
-              event.reply(`terminal-output-${id}`, { id, data: data.toString() })
-            })
-
-          ipcMain.on(`terminal-input-${id}`, (e, input) => {
-            stream.write(input)
-          })
-        })
-      })
-      .on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
-        // 筛选出需要用户输入的提示
-        const userInputPrompts = prompts.filter((prompt) => prompt.echo === true)
-
-        if (userInputPrompts.length > 0) {
-          // 发送请求给渲染进程，要求用户提供输入
-          event.reply(`keyboard-interactive-${id}`, { id, name, password, prompts })
-
-          // 监听用户输入的响应
-          ipcMain.once(`keyboard-interactive-response-${id}`, (event, responses) => {
-            // 调用 finish 继续认证过程
-            finish(responses)
-          })
-        } else {
-          // 如果不需要用户输入，用默认密码响应所有提示
-          const responses = prompts.map(() => password)
-          finish(responses)
-        }
-      })
-      .on('error', (err) => {
-        handleError(err)
-      })
-      .connect({
-        host,
-        port,
-        username,
-        ...(auth === 'password' && { password }),
-        ...(auth === 'public-key' && {
-          privateKey: require('fs').readFileSync(privateKeyPath),
-          ...(passphrase && { passphrase })
-        }),
-        ...(auth === 'keyboard-interactive' && {
-          tryKeyboard: true,
-          ...(password && { password })
-        }),
-        // 等待 SSH 握手完成的时间, 单位为毫秒, 10000ms = 1s
-        readyTimeout: 60000
-      })
-
-    connections[id] = {
-      conn,
-      isConnected: false
-    }
-  })
-
-  ipcMain.on('disconnect-ssh', (event, id) => {
-    console.log('Received disconnection request: ', id)
-    handleDisconnect(event, id)
-  })
+  ipcMain.on('connect-ssh', handleConnectSSH)
+  ipcMain.on('disconnect-ssh', handleDisconnectSSH)
 
   ipcMain.handle('dialog:openFile', handleFileOpen)
-
   ipcMain.handle('readLocalFile', handleFileRead)
+
+  ipcMain.handle('dbPath', () => {
+    return dbPath
+  })
+  ipcMain.handle('syncCloudDatabase', SyncCloudDatabase)
+
+  ipcMain.handle('createWebdav', handleCreateWebdav)
+  ipcMain.handle('getWebdavDirectoryContents', handleGetDirectoryContents)
+  ipcMain.handle('uploadConfig', handleUploadConfig)
+  ipcMain.handle('downloadConfig', handleDownloadConfig)
+
+  ipcMain.handle('getHosts', getHosts)
+  ipcMain.handle('addHost', addHost)
+  ipcMain.handle('updateHost', updateHost)
+  ipcMain.handle('deleteHost', deleteHost)
+
+  ipcMain.handle('getGroups', getGroups)
+  ipcMain.handle('addGroup', addGroup)
+  ipcMain.handle('updateGroup', updateGroup)
+  ipcMain.handle('deleteGroup', deleteGroup)
+
+  ipcMain.handle('getKeys', getKeys)
+  ipcMain.handle('addKey', addKey)
+  ipcMain.handle('updateKey', updateKey)
+  ipcMain.handle('deleteKey', deleteKey)
+
+  ipcMain.handle('getSettings', getSettings)
+  ipcMain.handle('updateSettings', updateSettings)
 
   createWindow()
 

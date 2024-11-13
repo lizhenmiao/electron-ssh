@@ -47,26 +47,26 @@ code {
 }
 
 /* hostDetails */
-.host-details-drawer .el-drawer__header {
+.custom-details-drawer .el-drawer__header {
   margin-bottom: 0;
 }
 
-.host-details-drawer .el-drawer__body {
+.custom-details-drawer .el-drawer__body {
   padding: 1rem;
   padding-right: 0;
 }
 
-.host-details-drawer .el-drawer__body .el-scrollbar {
+.custom-details-drawer .el-drawer__body .el-scrollbar {
   padding-right: 1rem;
 }
 
-.host-details-drawer .el-drawer__header .el-drawer__title {
+.custom-details-drawer .el-drawer__header .el-drawer__title {
   color: var(--ev-c-black-mute);
   font-weight: bold;
   font-size: 1rem;
 }
 
-.host-details-drawer .el-input__inner {
+.custom-details-drawer .el-input__inner {
   text-align: left !important;
 }
 
@@ -134,10 +134,31 @@ code {
   border-color: var(--menu-text-color);
 }
 
-.custom-menu-add-icon {
+.custom-menu-icon {
   color: var(--menu-text-color);
 }
 
-.custom-menu-add-icon:hover {
+.custom-menu-icon:hover {
   color: var(--menu-text-hover-color);
+}
+
+/* Vaults */
+.custom-tabs-header-no-margin .el-tabs__header {
+  margin: 0 !important;
+}
+
+.custom-tabs-header-no-margin .el-tabs__header .el-tabs__nav {
+  min-width: 5rem;
+}
+
+.custom-tabs-header-no-margin .el-tabs__header .el-tabs__item {
+  height: calc(3rem + 2px);
+}
+
+.custom-tabs-content-no-padding .el-tabs__content {
+  padding: 0 !important;
+}
+
+.custom-tabs-content-no-padding .el-tabs__content .el-tab-pane {
+  height: 100%;
 }

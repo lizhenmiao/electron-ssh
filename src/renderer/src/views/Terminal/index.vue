@@ -52,7 +52,7 @@ const searchTerminal = terminalStore.terminalList.find(
   (item) => item.menuId === `Terminal_${terminalId}`
 )
 const { menuId } = searchTerminal || {}
-const { host, port, username, password, auth, privateKeyPath, passphrase } =
+const { host, port, username, password, auth, privateKey, passphrase } =
   (searchTerminal && searchTerminal.params) || {}
 
 const initializeTerminal = () => {
@@ -145,7 +145,7 @@ const initializeTerminal = () => {
         username,
         password,
         auth,
-        privateKeyPath,
+        privateKey,
         passphrase
       }
     })

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
+import { ElMessage } from 'element-plus'
 
 /**
  * 创建新的终端
@@ -9,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
  * @param {String} hostDetails.auth 认证方式
  * @param {String} hostDetails.username 用户名
  * @param {String} hostDetails.password 密码
- * @param {String} hostDetails.privateKeyPath 私钥路径
+ * @param {String} hostDetails.privateKey 私钥内容
  * @param {String} hostDetails.passphrase 私钥密码
  * @returns
  */
@@ -33,7 +34,6 @@ export const createNewTerminal = (terminalStore, router, hostDetails) => {
     menuId,
     link,
     title: hostDetails.name,
-    isTerminal: true,
     params: {
       ...hostDetails
     }
@@ -126,10 +126,21 @@ export const getComputedStyleProperty = (element, property) => {
   return computedStyle.getPropertyValue(property)
 }
 
+// 转换 ipcMain 传递过来的 message
+export const parseIpcMainMessage = (err) => {
+  try {
+    const messageList = (err.message || err || '').split('Error:')
+    ElMessage.error(messageList.length ? messageList[messageList.length - 1].trim() : '出错了')
+  } catch (error) {
+    ElMessage.error(error.message)
+  }
+}
+
 export default {
   createNewTerminal,
   getTerminalName,
   debounce,
   throttle,
-  getComputedStyleProperty
+  getComputedStyleProperty,
+  parseIpcMainMessage
 }

@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "start": "electron-vite preview",
-    "dev": "electron-vite dev",
+    "dev": "chcp 65001 && electron-vite dev",
     "tailwind": "npx tailwindcss -i ./src/renderer/src/assets/input.css -o ./src/renderer/src/assets/output.css --watch",
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
@@ -30,10 +30,13 @@
     "element-plus": "^2.8.7",
     "pinia": "^2.2.6",
     "pinia-plugin-persistedstate": "^4.1.2",
+    "sequelize": "^6.37.5",
+    "sqlite3": "^5.1.7",
     "ssh2": "^1.16.0",
     "uuid": "^11.0.2",
     "vue-router": "^4.4.5",
-    "vue-virtual-scroller": "^2.0.0-beta.8"
+    "vue-virtual-scroller": "^2.0.0-beta.8",
+    "webdav": "^4.11.4"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.2",
