@@ -16,8 +16,11 @@ import '@renderer/assets/main.css'
  */
 import 'virtual:svg-icons-register'
 
+import CustomDialog from '@renderer/components/CustomDialog/index.vue'
+
 const app = createApp(App)
 
+app.component('CustomDialog', CustomDialog)
 app.component('RecycleScroller', RecycleScroller)
 app.config.globalProperties.$utils = utils
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

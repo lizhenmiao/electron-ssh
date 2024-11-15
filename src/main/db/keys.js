@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize')
-import { SyncDatabase, Keys, Hosts } from './sqlite.js'
+import { SyncDatabase, Keys, Hosts, replaceUndefinedWithNull } from './sqlite.js'
 import { encrypt, decrypt } from '../utils/index.js'
 
 // 解密私钥信息
@@ -19,7 +19,9 @@ export const getKeys = () => {
       console.log('开始获取 keys 信息 --------------------')
       Keys.findAll()
         .then((keys) => {
-          resolve((keys || []).map((item) => decryptKey(item.dataValues)))
+          const keyList = (keys || []).map((item) => decryptKey(item.dataValues))
+          const sortKeyList = keyList.sort((a, b) => b.sort - a.sort)
+          resolve(sortKeyList)
         })
         .catch((err) => reject(err))
     })
@@ -31,7 +33,7 @@ export const addKey = (event, key) => {
   return new Promise((resolve, reject) => {
     SyncDatabase(async () => {
       try {
-        const { name, privateKey, passphrase } = key || {}
+        const { name, description, sort, privateKey, passphrase } = key || {}
         // 判断 key 是否存在
         const existKey = await Keys.findOne({
           where: {
@@ -41,11 +43,15 @@ export const addKey = (event, key) => {
         if (existKey) {
           reject(new Error(`已存在同名私钥`))
         } else {
-          const newKey = await Keys.create({
-            name,
-            privateKey: privateKey ? encrypt(privateKey) : null,
-            passphrase: passphrase ? encrypt(passphrase) : null
-          })
+          const newKey = await Keys.create(
+            replaceUndefinedWithNull({
+              name,
+              description,
+              sort,
+              privateKey: privateKey ? encrypt(privateKey) : null,
+              passphrase: passphrase ? encrypt(passphrase) : null
+            })
+          )
           resolve(newKey)
         }
       } catch (err) {
@@ -60,7 +66,7 @@ export const updateKey = (event, key) => {
   return new Promise((resolve, reject) => {
     SyncDatabase(async () => {
       try {
-        const { id, name, privateKey, passphrase } = key || {}
+        const { id, name, description, sort, privateKey, passphrase } = key || {}
         // 判断 key 是否存在
         const existKey = await Keys.findOne({
           where: {
@@ -72,11 +78,13 @@ export const updateKey = (event, key) => {
           reject(new Error(`已存在同名私钥`))
         } else {
           const updatedKey = await Keys.update(
-            {
+            replaceUndefinedWithNull({
               name,
+              description,
+              sort,
               privateKey: privateKey ? encrypt(privateKey) : null,
               passphrase: passphrase ? encrypt(passphrase) : null
-            },
+            }),
             { where: { id } }
           )
           resolve(updatedKey)

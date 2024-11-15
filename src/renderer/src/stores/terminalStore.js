@@ -30,7 +30,9 @@ export const useTerminalStore = defineStore('terminal', {
     // 所有私钥
     allKeys: [],
     // 当前选中的分组数组
-    selectedGroups: []
+    selectedGroups: [],
+    // 当前 webdav 是否已连接
+    webdavConnected: false
   }),
   getters: {
     // 当前分组下的主机列表
@@ -196,6 +198,10 @@ export const useTerminalStore = defineStore('terminal', {
     // 清空当前选中的分组
     clearActiveGroups() {
       this.selectedGroups = []
+    },
+    // 设置当前 webdav 是否已连接
+    setWebdavConnected(webdavConnected) {
+      this.webdavConnected = webdavConnected
     }
   },
   persist: false

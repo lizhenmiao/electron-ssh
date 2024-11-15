@@ -2,12 +2,12 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-12 14:42:40
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-13 11:46:30
+ * @LastEditTime: 2024-11-14 09:49:17
  * @FilePath: \electron-ssh\src\renderer\src\views\Vaults\module\hosts\index.vue
  * @Description: 分组以及主机列表
 -->
 <template>
-  <customTabContent>
+  <CustomTabContent>
     <template #header>
       <el-dropdown
         split-button
@@ -49,7 +49,7 @@
       </div>
     </template>
     <template #default>
-      <itemSection
+      <ItemSection
         title="分组"
         :items="terminalStore.groupsList"
         icon="Menu"
@@ -61,7 +61,7 @@
         @dblclick="terminalStore.setActiveGroup($event)"
         @edit="emit('edit-group', $event)"
       />
-      <itemSection
+      <ItemSection
         :class="terminalStore.groupsList.length > 0 ? 'mt-4' : ''"
         title="主机"
         :items="terminalStore.hostsList"
@@ -75,15 +75,15 @@
         @edit="emit('edit-host', $event)"
       />
     </template>
-  </customTabContent>
+  </CustomTabContent>
 </template>
 
 <script setup>
 import { getCurrentInstance } from 'vue'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 import { useRouter } from 'vue-router'
-import customTabContent from '@renderer/views/Vaults/module/customTabContent/index.vue'
-import itemSection from '@renderer/views/Vaults/module/itemSection/index.vue'
+import CustomTabContent from '@renderer/views/Vaults/components/CustomTabContent/index.vue'
+import ItemSection from '@renderer/views/Vaults/components/ItemSection/index.vue'
 
 const emit = defineEmits(['add-host', 'edit-host', 'add-group', 'edit-group', 'add-key'])
 const { proxy } = getCurrentInstance()

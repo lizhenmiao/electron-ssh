@@ -7,12 +7,12 @@
  * @Description: 私钥列表
 -->
 <template>
-  <customTabContent>
+  <CustomTabContent>
     <template #header>
       <el-button type="primary" icon="Key" @click="emit('add-key')">新建私钥</el-button>
     </template>
     <template #default>
-      <itemSection
+      <ItemSection
         title="私钥"
         :items="terminalStore.allKeys"
         icon="Key"
@@ -24,13 +24,13 @@
         @edit="emit('edit-key', $event)"
       />
     </template>
-  </customTabContent>
+  </CustomTabContent>
 </template>
 
 <script setup>
 import { useTerminalStore } from '@renderer/stores/terminalStore'
-import customTabContent from '@renderer/views/Vaults/module/customTabContent/index.vue'
-import itemSection from '@renderer/views/Vaults/module/itemSection/index.vue'
+import CustomTabContent from '@renderer/views/Vaults/components/CustomTabContent/index.vue'
+import ItemSection from '@renderer/views/Vaults/components/ItemSection/index.vue'
 
 const terminalStore = useTerminalStore()
 

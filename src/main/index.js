@@ -84,7 +84,7 @@ app.whenReady().then(() => {
   ipcMain.handle('dialog:openFile', handleFileOpen)
   ipcMain.handle('readLocalFile', handleFileRead)
 
-  ipcMain.handle('dbPath', () => {
+  ipcMain.handle('getDatabasePath', () => {
     return dbPath
   })
   ipcMain.handle('syncCloudDatabase', SyncCloudDatabase)

@@ -1,55 +1,57 @@
 <template>
-  <el-dialog
-    v-model="visible"
+  <CustomDialog
+    ref="customDialogRef"
     :title="pageType === 'add' ? '新建私钥' : '修改私钥'"
     :width="350"
-    align-center
-    :show-close="false"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
   >
-    <div class="max-h-[70vh]">
-      <el-scrollbar v-loading="loading">
-        <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-          <el-form-item label="名称 (Name)" prop="name">
-            <el-input v-model="form.name" />
-          </el-form-item>
-          <el-form-item label="私钥 (PrivateKey)" prop="privateKey">
-            <el-input
-              v-model="form.privateKey"
-              type="textarea"
-              placeholder="直接在输入框中粘贴私钥内容或者选择文件以读取文件内容, 二选一即可。文件后缀可能为：pem/ppk/key/der/crt/cer/pfx/p12"
-              :rows="5"
-              resize="none"
-            />
-          </el-form-item>
-          <el-form-item label="选择私钥文件">
-            <el-button type="primary" @click="handleFileOpen">选择文件</el-button>
-          </el-form-item>
-          <el-form-item label="密码 (Passphrase)" prop="passphrase">
-            <el-input v-model="form.passphrase" type="password" show-password />
-          </el-form-item>
-        </el-form>
-      </el-scrollbar>
-    </div>
+    <el-form ref="formRef" v-loading="loading" :model="form" :rules="rules" label-position="top">
+      <el-form-item label="名称 (Name)" prop="name">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="备注 (Description)" prop="description">
+        <el-input v-model="form.description" type="textarea" :rows="5" resize="none" />
+      </el-form-item>
+      <el-form-item label="排序序号 (Sort 数值越大排序越靠前)" prop="sort">
+        <el-input-number v-model="form.sort" :controls="false" class="!w-full" :precision="0" />
+      </el-form-item>
+      <el-form-item label="私钥 (PrivateKey)" prop="privateKey">
+        <el-input
+          v-model="form.privateKey"
+          type="textarea"
+          placeholder="直接在输入框中粘贴私钥内容或者选择文件以读取文件内容, 二选一即可。文件后缀可能为：pem/ppk/key/der/crt/cer/pfx/p12"
+          :rows="5"
+          resize="none"
+        />
+      </el-form-item>
+      <el-form-item label="选择私钥文件">
+        <el-button type="primary" @click="handleFileOpen">选择文件</el-button>
+      </el-form-item>
+      <el-form-item label="密码 (Passphrase)" prop="passphrase">
+        <el-input v-model="form.passphrase" type="password" show-password />
+      </el-form-item>
+    </el-form>
     <template #footer>
       <div class="grid grid-cols-2 gap-2">
         <el-button :loading="loading" type="primary" @click="handleSave">
           {{ pageType === 'add' ? '创 建' : '保 存' }}
         </el-button>
-        <el-button class="!m-0" :loading="loading" type="danger" @click="close"> 取 消 </el-button>
+        <el-button :loading="loading" class="!m-0" type="danger" @click="close"> 取 消 </el-button>
       </div>
     </template>
-  </el-dialog>
+  </CustomDialog>
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 
 const terminalStore = useTerminalStore()
 
+const customDialogRef = ref(null)
 const formRef = ref(null)
-const visible = ref(false)
 const pageType = ref('add')
 const loading = ref(false)
 // 当编辑时的原始数据
@@ -58,6 +60,10 @@ const originDetails = ref({})
 const form = ref({
   // 名称
   name: null,
+  // 备注
+  description: null,
+  // 排序序号
+  sort: 0,
   // 私钥
   privateKey: null,
   // 密码
@@ -70,11 +76,10 @@ const rules = ref({
 })
 
 const open = (type = 'add', details = {}) => {
-  visible.value = true
-  nextTick(() => {
+  customDialogRef.value.open(() => {
     pageType.value = type
     if (type === 'edit') {
-      form.value = { ...details }
+      Object.keys(form.value).forEach((key) => (form.value[key] = details[key]))
       originDetails.value = { ...details }
     }
   })
@@ -84,7 +89,7 @@ const close = () => {
   formRef.value.resetFields()
   pageType.value = 'add'
   originDetails.value = {}
-  visible.value = false
+  customDialogRef.value.close()
 }
 
 const handleSave = () => {

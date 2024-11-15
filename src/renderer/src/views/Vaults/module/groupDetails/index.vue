@@ -2,58 +2,60 @@
  * @Author: lizhenmiao 431521978@qq.com
  * @Date: 2024-11-11 17:58:53
  * @LastEditors: lizhenmiao 431521978@qq.com
- * @LastEditTime: 2024-11-13 17:42:47
+ * @LastEditTime: 2024-11-15 16:56:32
  * @FilePath: \electron-ssh\src\renderer\src\views\Vaults\module\groupDetails\index.vue
  * @Description: 分组详情
 -->
 <template>
-  <el-dialog
-    v-model="visible"
+  <CustomDialog
+    ref="customDialogRef"
     :title="pageType === 'add' ? '新建分组' : '修改分组'"
     :width="350"
-    align-center
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
   >
-    <el-scrollbar v-loading="loading">
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-        <el-form-item label="名称 (Name)" prop="name">
-          <el-input v-model="form.name" />
-        </el-form-item>
-        <el-form-item label="备注 (Description)" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="3" resize="none" />
-        </el-form-item>
-        <el-form-item label="上级分组 (Parent Group)" prop="parentGroupId">
-          <el-select v-model="form.parentGroupId" filterable placeholder="请选择">
-            <el-option
-              v-for="item in terminalStore.allGroups"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
-    </el-scrollbar>
+    <el-form ref="formRef" v-loading="loading" :model="form" :rules="rules" label-position="top">
+      <el-form-item label="名称 (Name)" prop="name">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="备注 (Description)" prop="description">
+        <el-input v-model="form.description" type="textarea" :rows="5" resize="none" />
+      </el-form-item>
+      <el-form-item label="排序序号 (Sort 数值越大排序越靠前)" prop="sort">
+        <el-input-number v-model="form.sort" :controls="false" class="!w-full" :precision="0" />
+      </el-form-item>
+      <el-form-item label="上级分组 (Parent Group)" prop="parentGroupId">
+        <el-select v-model="form.parentGroupId" filterable clearable placeholder="请选择">
+          <el-option
+            v-for="item in terminalStore.allGroups"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
     <template #footer>
       <div class="grid grid-cols-2 gap-2">
         <el-button :loading="loading" type="primary" @click="handleSave">
           {{ pageType === 'add' ? '创 建' : '保 存' }}
         </el-button>
-        <el-button class="!m-0" :loading="loading" type="danger" @click="close"> 取 消 </el-button>
+        <el-button :loading="loading" class="!m-0" type="danger" @click="close"> 取 消 </el-button>
       </div>
     </template>
-  </el-dialog>
+  </CustomDialog>
 </template>
 
 <script setup>
-import { nextTick, ref, getCurrentInstance } from 'vue'
+import { ref, getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useTerminalStore } from '@renderer/stores/terminalStore'
 
 const { proxy } = getCurrentInstance()
 const terminalStore = useTerminalStore()
 
+const customDialogRef = ref(null)
 const formRef = ref(null)
-const visible = ref(false)
 const pageType = ref('add')
 const loading = ref(false)
 // 当编辑时的原始数据
@@ -64,6 +66,8 @@ const form = ref({
   name: null,
   // 备注
   description: null,
+  // 排序序号
+  sort: 0,
   // 上级分组
   parentGroupId: null
 })
@@ -73,11 +77,10 @@ const rules = ref({
 })
 
 const open = (type = 'add', details = {}) => {
-  visible.value = true
-  nextTick(() => {
+  customDialogRef.value.open(() => {
     pageType.value = type
     if (type === 'edit') {
-      form.value = { ...details }
+      Object.keys(form.value).forEach((key) => (form.value[key] = details[key]))
       originDetails.value = { ...details }
     }
   })
@@ -87,7 +90,7 @@ const close = () => {
   formRef.value.resetFields()
   pageType.value = 'add'
   originDetails.value = {}
-  visible.value = false
+  customDialogRef.value.close()
 }
 
 const handleSave = () => {

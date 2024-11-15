@@ -66,6 +66,7 @@ code {
   font-size: 1rem;
 }
 
+.custom-dialog-wrapper .el-input__inner,
 .custom-details-drawer .el-input__inner {
   text-align: left !important;
 }
@@ -161,4 +162,30 @@ code {
 
 .custom-tabs-content-no-padding .el-tabs__content .el-tab-pane {
   height: 100%;
+}
+
+/* CustomDialog */
+.custom-dialog-wrapper {
+  padding: 0 !important;
+}
+
+.custom-dialog-wrapper .el-dialog__header,
+.custom-dialog-wrapper .el-dialog__footer {
+  padding: 1rem;
+}
+
+.custom-dialog-wrapper .el-dialog__body {
+  padding-left: 1rem;
+}
+
+.custom-dialog-wrapper.no-header .el-dialog__body {
+  padding-top: 1rem;
+}
+
+.custom-dialog-wrapper.no-footer .el-dialog__body {
+  padding-bottom: 1rem;
+}
+
+.custom-dialog-wrapper.no-header .el-dialog__header {
+  display: none;
 }

@@ -1,4 +1,5 @@
-import { SyncDatabase, Hosts, Keys } from './sqlite.js'
+const { Sequelize } = require('sequelize')
+import { SyncDatabase, Hosts, Keys, replaceUndefinedWithNull } from './sqlite.js'
 import { encrypt, decrypt } from '../utils/index.js'
 
 // 过滤 host 的 key
@@ -7,6 +8,7 @@ const filterHostKeys = (hostDetails, containsId = false) => {
     id,
     name,
     description,
+    sort,
     protocol,
     host,
     port,
@@ -24,6 +26,7 @@ const filterHostKeys = (hostDetails, containsId = false) => {
   return {
     name,
     description,
+    sort,
     protocol,
     host,
     port,
@@ -48,10 +51,10 @@ const encryptHost = (host) => {
   const filteredHost = filterHostKeys(host, false)
   const { password } = filteredHost
 
-  return {
+  return replaceUndefinedWithNull({
     ...filteredHost,
     password: password ? encrypt(password) : null
-  }
+  })
 }
 
 // 解密 host
@@ -59,10 +62,10 @@ const decryptHost = (host) => {
   const filteredHost = filterHostKeys(host, true)
   const { password } = filteredHost
 
-  return {
+  return replaceUndefinedWithNull({
     ...filteredHost,
     password: password ? decrypt(password) : null
-  }
+  })
 }
 
 // 获取分组以及主机信息
@@ -92,7 +95,7 @@ export const getHosts = () => {
             })
           )
 
-          resolve(flatHosts)
+          resolve(flatHosts.sort((a, b) => b.sort - a.sort))
         })
         .catch((err) => reject(err))
     })
@@ -100,12 +103,27 @@ export const getHosts = () => {
 }
 
 // 添加主机信息
-export const addHost = (event, host) => {
+export const addHost = (event, hostDetails) => {
   return new Promise((resolve, reject) => {
     SyncDatabase(async () => {
       try {
-        const newHost = await Hosts.create(encryptHost(host))
-        resolve(newHost)
+        const { host, port, auth, username, protocol } = hostDetails || {}
+        // 判断 host 是否存在
+        const existHost = await Hosts.findOne({
+          where: {
+            host,
+            port,
+            auth,
+            username,
+            protocol
+          }
+        })
+        if (existHost) {
+          reject(new Error(`已存在同名主机`))
+        } else {
+          const newHost = await Hosts.create(encryptHost(hostDetails))
+          resolve(newHost)
+        }
       } catch (err) {
         reject(err)
       }
@@ -114,16 +132,31 @@ export const addHost = (event, host) => {
 }
 
 // 更新主机信息
-export const updateHost = (event, host) => {
+export const updateHost = (event, hostDetails) => {
   return new Promise((resolve, reject) => {
     SyncDatabase(async () => {
-      const { id } = host
+      const { id, host, port, auth, username, protocol } = hostDetails
 
       try {
-        const updatedHost = await Hosts.update(encryptHost(host), {
-          where: { id }
+        // 判断 host 是否存在
+        const existHost = await Hosts.findOne({
+          where: {
+            host,
+            port,
+            auth,
+            username,
+            protocol,
+            id: { [Sequelize.Op.ne]: id }
+          }
         })
-        resolve(updatedHost)
+        if (existHost) {
+          reject(new Error(`已存在同名主机`))
+        } else {
+          const updatedHost = await Hosts.update(encryptHost(hostDetails), {
+            where: { id }
+          })
+          resolve(updatedHost)
+        }
       } catch (err) {
         reject(err)
       }

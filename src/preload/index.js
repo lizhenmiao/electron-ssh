@@ -5,7 +5,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
   readLocalFile: (path, options) => ipcRenderer.invoke('readLocalFile', path, options),
-  dbPath: () => ipcRenderer.invoke('dbPath'),
+  getDatabasePath: () => ipcRenderer.invoke('getDatabasePath'),
   SyncCloudDatabase: (sqlBuffer) => ipcRenderer.invoke('syncCloudDatabase', sqlBuffer),
   createWebdav: (config) => ipcRenderer.invoke('createWebdav', config),
   getWebdavDirectoryContents: (dirctory) =>

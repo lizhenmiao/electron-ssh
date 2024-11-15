@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize')
-import { SyncDatabase, Groups } from './sqlite.js'
+import { SyncDatabase, Groups, replaceUndefinedWithNull } from './sqlite.js'
 
 // 获取分组信息
 export const getGroups = () => {
@@ -8,7 +8,9 @@ export const getGroups = () => {
       console.log('开始获取 groups 信息 --------------------')
       Groups.findAll()
         .then((groups) => {
-          resolve((groups || []).map((item) => item.dataValues))
+          const groupList = (groups || []).map((item) => item.dataValues)
+          const sortGroupList = groupList.sort((a, b) => b.sort - a.sort)
+          resolve(sortGroupList)
         })
         .catch((err) => reject(err))
     })
@@ -31,7 +33,7 @@ export const addGroup = (event, group) => {
         if (existGroup) {
           reject(new Error(`${parentGroupId ? '当前上级分组下' : ''}已存在同名分组`))
         } else {
-          const newGroup = await Groups.create(group)
+          const newGroup = await Groups.create(replaceUndefinedWithNull(group))
           resolve(newGroup)
         }
       } catch (err) {
@@ -58,7 +60,7 @@ export const updateGroup = (event, group) => {
         if (existGroup) {
           reject(new Error(`${parentGroupId ? '当前上级分组下' : ''}已存在同名分组`))
         } else {
-          const updatedGroup = await Groups.update(group, {
+          const updatedGroup = await Groups.update(replaceUndefinedWithNull(group), {
             where: { id: group.id }
           })
           resolve(updatedGroup)

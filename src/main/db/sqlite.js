@@ -48,6 +48,11 @@ const initializeModels = (sequelizeInstance) => {
         type: Sequelize.TEXT,
         comment: '主机描述'
       },
+      sort: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+        comment: '排序序号, 数值越大, 排序越靠前, 默认为 0'
+      },
       protocol: {
         type: Sequelize.STRING,
         comment: '使用的协议（如SSH, HTTP等）'
@@ -106,6 +111,11 @@ const initializeModels = (sequelizeInstance) => {
         type: Sequelize.TEXT,
         comment: '分组描述'
       },
+      sort: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+        comment: '排序序号, 数值越大, 排序越靠前, 默认为 0'
+      },
       parentGroupId: {
         type: Sequelize.INTEGER,
         comment: '父分组的ID'
@@ -130,6 +140,15 @@ const initializeModels = (sequelizeInstance) => {
         type: Sequelize.STRING,
         allowNull: false,
         comment: '私钥名称'
+      },
+      description: {
+        type: Sequelize.TEXT,
+        comment: '私钥描述'
+      },
+      sort: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+        comment: '排序序号, 数值越大, 排序越靠前, 默认为 0'
       },
       privateKey: {
         type: Sequelize.TEXT,
@@ -275,6 +294,23 @@ export const SyncCloudDatabase = (event, sqlBuffer) => {
   })
 }
 
+/**
+ * 将对象中的 undefined 替换为 null
+ * @param {Object} obj 对象
+ * @returns {Object} 替换后的对象
+ */
+export const replaceUndefinedWithNull = (obj) => {
+  const newObj = {}
+
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      newObj[key] = obj[key] === undefined ? null : obj[key]
+    }
+  }
+
+  return newObj
+}
+
 module.exports = {
   Sequelize,
   dbPath,
@@ -283,5 +319,6 @@ module.exports = {
   Keys,
   Settings,
   SyncDatabase,
-  SyncCloudDatabase
+  SyncCloudDatabase,
+  replaceUndefinedWithNull
 }
